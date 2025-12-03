@@ -8,7 +8,7 @@ contract SmartWallet{
     event Withdrawn(address user, uint256 amount);
 
     modifier OnlyOwner(){
-      owner = msg.sender;
+      require(msg.sender == owner, "You are not the owner");
       _;
     }
 
@@ -23,11 +23,18 @@ contract SmartWallet{
     }
 
     function withdraw(uint256 _amount) external OnlyOwner{
-      require(_amount > 0, "You are not the owner");
-
+      require(_amount > 0, "Amount must be greater than 0");
+      require(_amount <= getBalance(), "");
+      (bool sent, ) = msg.sender.call{value: _amount}("");
+      require(sent, "Failed to send ether");
+      emit Withdrawn(msg.sender, _amount);
     }
 
-    function getBalance() external view returns(uint){
+    function getUserDeposit(address _user) external view returns (uint256) {
+    return user[_user];
+    }
+
+    function getBalance() public view returns(uint){
       return address(this).balance;
     }
 }
